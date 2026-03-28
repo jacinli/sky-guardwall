@@ -1,0 +1,21 @@
+# Example firewall config
+# No real IP addresses included
+
+[global]
+# Sources allowed to access all ports
+YOUR_IPV4_A
+YOUR_IPV4_B
+YOUR_IPV6_CIDR_A
+
+[public]
+# Ports open to everyone
+80 tcp
+443 tcp
+
+[inbound]
+# Port-specific allowlist
+# Format: <port> <protocol> <source_ip_or_cidr>
+9176 tcp YOUR_IPV4_A
+3000 tcp YOUR_IPV4_A
+8080 tcp YOUR_IPV4_A
+# 8080 tcp YOUR_IPV6_CIDR_A
