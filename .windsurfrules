@@ -1,0 +1,81 @@
+# SkyGuardwall — Windsurf Cascade Rules
+
+You are an expert Go and React developer working on SkyGuardwall — a Docker host-network firewall management tool that reads iptables/nftables/ss from the host machine and provides a React web UI for port exposure analysis and firewall rule management.
+
+## Tech Stack
+
+- Backend: Go 1.22+, Gin, GORM, golang-jwt/jwt v5, log/slog
+- Frontend: React 18, TypeScript strict, Vite, Ant Design 5.x, Zustand, Axios
+- Database: GORM + modernc.org/sqlite (default) / MySQL / PostgreSQL
+- Deploy: Docker host network, single port 8080, go:embed
+
+## Project Layout
+
+```
+cmd/server/main.go           # Entry point + go:embed
+internal/handler/            # Gin handlers — HTTP binding only
+internal/service/            # Business logic + exec.CommandContext
+internal/service/parser/     # Pure parsers: ss, iptables, nft
+internal/model/              # GORM structs (NO foreign keys)
+internal/database/db.go      # Multi-DB init + AutoMigrate
+internal/router/router.go    # All routes
+frontend/src/api/client.ts   # Axios + Bearer interceptor
+frontend/src/store/auth.ts   # Zustand auth state
+frontend/src/pages/          # Dashboard Ports Iptables Nft Firewall Login
+```
+
+## Architecture
+
+```
+Browser → :8080
+  /api/v1/*  → JWT middleware → Handler → Service → exec/GORM
+  /*         → Gin serves embedded React SPA (go:embed frontend/dist)
+```
+
+No Nginx. No separate frontend server. One binary, one port.
+
+## Non-Negotiable Rules
+
+### Database
+- NEVER add foreign key constraints — no `gorm:"foreignKey:..."`, `References:`, `constraint:`
+- GORM AutoMigrate only — no raw DDL
+- Works on SQLite / MySQL / PostgreSQL without schema changes
+
+### Backend Go
+- Handlers: HTTP binding + response only. No exec, no business logic.
+- Services: all logic, all `exec.CommandContext` calls
+- Allowed exec commands only: `iptables`, `iptables-save`, `ip6tables`, `ss`, `nft`, `ip`
+- All iptables write inputs validated: IP/CIDR, port 0–65535, action in {ACCEPT,DROP,REJECT}
+- Unified response: `{"code":0,"message":"success","data":{...}}`
+- Log writes with slog.Info; never log passwords or tokens
+
+### Frontend TypeScript
+- All API calls through `src/api/client.ts` (Axios instance). Never `fetch()`.
+- Named exports only. No `any`. No `@ts-ignore`.
+- Ant Design only — no mixing UI libraries
+- Token in localStorage key `sgw_token`; 401 → redirect to /login + clear token
+
+### Docker
+- `network_mode: host` + `privileged: true` — required
+- Single service, no sidecars
+- `CGO_ENABLED=0` (modernc.org/sqlite is pure-Go)
+- Runtime image needs: iptables ip6tables nftables iproute2
+
+## Dev Commands
+
+```bash
+go mod tidy && go run ./cmd/server
+cd frontend && npm install && npm run dev
+npm run build --prefix frontend && go build -o sky-guardwall ./cmd/server
+docker compose up --build
+```
+
+## Do NOT
+
+- Add foreign keys or `REFERENCES` to any model
+- Use `bash -c` or shell with user-controlled strings
+- Call exec in handlers
+- Add dependencies without checking go.mod / package.json first
+- Add new Docker services
+- Use `fetch()` in React components
+- Write raw SQL

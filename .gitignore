@@ -1,0 +1,11 @@
+sky-guardwall
+frontend/node_modules/
+# frontend build output — rebuilt by Dockerfile; keep only .gitkeep
+internal/frontend/dist/*
+!internal/frontend/dist/.gitkeep
+data/
+*.db
+*.db-shm
+*.db-wal
+.env
+.DS_Store

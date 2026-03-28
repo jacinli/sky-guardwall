@@ -1,0 +1,20 @@
+acs_version: "1.0"
+
+project:
+  name: "sky-guardwall"
+  description: "Host firewall management tool — Docker host network mode, reads/writes iptables/nftables, React web UI for port exposure visualization and rule management."
+  language: "zh-CN"
+
+layers:
+  context: true
+  skills: true
+  permissions: true
+
+compatible_with:
+  - codex
+  - claude-code
+  - cursor
+  - copilot
+  - windsurf
+  - gemini-cli
+  - any
