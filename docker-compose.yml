@@ -10,14 +10,13 @@ services:
     network_mode: host          # Required: shares host iptables / ss / network stack
     privileged: true            # Required: allows iptables write operations
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      - ADMIN_USER=admin
-      - ADMIN_PASS=changeme         # ⚠ Change this in production
-      - JWT_SECRET=change-me-to-a-random-32-char-secret
       - JWT_EXPIRE_HOURS=24
       - DB_TYPE=sqlite
       - DB_DSN=/data/sky-guardwall.db
       - PORT=9176
-      - SYNC_INTERVAL_SECS=60       # Sync iptables every 60 seconds
+      - SYNC_INTERVAL_SECS=60
     volumes:
       - ./data:/data                 # Persist SQLite database
